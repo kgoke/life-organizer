@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for(:title).presence ? "#{yield(:title)} · Life Organizer" : "Life Organizer" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#3b6ef5">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "fullcalendar.global.min" %>
+    <%= yield :head %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body>
+    <header class="topbar">
+      <a href="<%= root_path %>" class="brand"><%= icon("logo") %><span>Life Organizer</span></a>
+      <nav class="mainnav" aria-label="Main">
+        <% OrganizerModules.navigation.sort_by { |n| n[:label] == "Today" ? 0 : 1 }.each do |item| %>
+          <% path = public_send(item[:path]) %>
+          <a href="<%= path %>" class="<%= 'active' if nav_active?(path) %>"><%= icon(item[:icon]) %><span><%= item[:label] %></span></a>
+        <% end %>
+        <a href="<%= settings_path %>" class="<%= 'active' if nav_active?(settings_path) %>"><%= icon("gear") %><span>Settings</span></a>
+      </nav>
+    </header>
+    <main class="page">
+      <% if notice.present? %><div class="flash notice" role="status"><%= notice %></div><% end %>
+      <% if alert.present? %><div class="flash alert" role="alert"><%= alert %></div><% end %>
+      <%= yield %>
+    </main>
+  </body>
+</html>

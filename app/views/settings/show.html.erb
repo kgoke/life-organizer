@@ -1,0 +1,120 @@
+<% content_for :title, "Settings" %>
+<div class="page-head"><h1>Settings</h1>
+  <%= button_to "Sign out", logout_path, method: :delete, class: "btn" %>
+</div>
+
+<div class="settings-grid">
+  <section class="card" id="connect">
+    <h2>Connect Claude</h2>
+    <p>Claude reaches your organizer at this address:</p>
+    <div class="copy-row" data-controller="copy"><code data-copy-target="source"><%= @mcp_url %></code><button class="btn small" data-action="copy#copy">Copy</button></div>
+    <% if @mcp_url.start_with?("http://localhost") || @mcp_url.start_with?("http://127.") %>
+      <p class="warn">PUBLIC_URL isn't set, so this is a local address that Claude on the web can't reach. See the README for exposing the app with HTTPS.</p>
+    <% end %>
+    <h3>Claude on the web, desktop and phone</h3>
+    <ol class="steps">
+      <li>In Claude, open <strong>Settings → Connectors → Add custom connector</strong>.</li>
+      <li>Name it “Life Organizer” and paste the address above.</li>
+      <li>Click <strong>Connect</strong>. This app asks for your app password, then you choose <strong>Allow</strong>.</li>
+    </ol>
+    <h3>Claude Code and scripts</h3>
+    <p>Create an API key below, then run:</p>
+    <pre class="code" data-controller="copy"><code data-copy-target="source">claude mcp add --transport http life-organizer <%= @mcp_url %> --header "Authorization: Bearer YOUR_API_KEY"</code></pre>
+    <p class="muted small">The REST API is at <code>/api/v1</code> with the same key. See docs/API.md.</p>
+  </section>
+
+  <section class="card" id="api-keys">
+    <h2>API keys</h2>
+    <% if @new_key %>
+      <div class="new-key">
+        <p><strong>Your new key.</strong> Copy it now; it won't be shown again.</p>
+        <div class="copy-row" data-controller="copy"><code data-copy-target="source"><%= @new_key %></code><button class="btn small" data-action="copy#copy">Copy</button></div>
+      </div>
+    <% end %>
+    <% if @api_keys.any? %>
+      <ul class="plain list-rows">
+        <% @api_keys.each do |k| %>
+          <li><span><strong><%= k.name %></strong> <code><%= k.prefix %>…</code><br><span class="muted small">Created <%= time_ago_in_words(k.created_at) %> ago · <%= k.last_used_at ? "used #{time_ago_in_words(k.last_used_at)} ago" : "never used" %></span></span>
+            <%= button_to "Revoke", settings_api_key_path(k), method: :delete, class: "btn small danger", form: { data: { turbo_confirm: "Revoke “#{k.name}”? Anything using it stops working." } } %></li>
+        <% end %>
+      </ul>
+    <% end %>
+    <%= form_with url: settings_api_keys_path, class: "inline-add" do %>
+      <%= text_field_tag :name, nil, placeholder: "Key name, e.g. Claude Code", required: true %>
+      <%= submit_tag "Create key", class: "btn" %>
+    <% end %>
+  </section>
+
+  <section class="card" id="connections">
+    <h2>Connected apps</h2>
+    <% if @connected.empty? %>
+      <p class="empty">No apps connected yet.</p>
+    <% else %>
+      <ul class="plain list-rows">
+        <% @connected.each do |c| %>
+          <li><span><strong><%= c.name %></strong><br><span class="muted small">Connected <%= time_ago_in_words(c.created_at) %> ago</span></span>
+            <%= button_to "Disconnect", settings_connected_app_path(c), method: :delete, class: "btn small danger" %></li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <section class="card" id="feed">
+    <h2>Calendar feed</h2>
+    <p>Subscribe to this address in Apple Calendar, Google Calendar or Outlook to see your events, time blocks and due dates there (read-only).</p>
+    <div class="copy-row" data-controller="copy"><code data-copy-target="source"><%= @feed_url %></code><button class="btn small" data-action="copy#copy">Copy</button></div>
+    <p class="muted small">Anyone with this address can read your calendar. If it leaks, make a new one.</p>
+    <%= button_to "Make a new address", settings_feed_token_path, class: "btn small", form: { data: { turbo_confirm: "The old address will stop working. Continue?" } } %>
+  </section>
+
+  <section class="card" id="calendars">
+    <h2>Calendars</h2>
+    <ul class="plain list-rows">
+      <% @calendars.each do |c| %>
+        <li>
+          <%= form_with model: c, url: settings_calendar_path(c), method: :patch, class: "inline-edit" do |f| %>
+            <%= f.color_field :color, "aria-label": "Color" %>
+            <%= f.text_field :name, "aria-label": "Name" %>
+            <label class="check-label small"><%= f.check_box :include_in_feed %> In feed</label>
+            <% unless c.is_default %><label class="check-label small"><%= f.check_box :is_default %> Default</label><% else %><span class="badge">Default</span><% end %>
+            <%= f.submit "Save", class: "btn small" %>
+          <% end %>
+          <% unless c.is_default %><%= button_to icon("trash", size: 15), settings_calendar_path(c), method: :delete, class: "btn small danger icon-btn", "aria-label": "Delete #{c.name}", form: { data: { turbo_confirm: "Delete “#{c.name}” and all its events?" } } %><% end %>
+        </li>
+      <% end %>
+    </ul>
+    <%= form_with url: settings_calendars_path, scope: :calendar, class: "inline-add" do |f| %>
+      <%= f.color_field :color, value: "#e8833a", "aria-label": "Color" %>
+      <%= f.text_field :name, placeholder: "New calendar", required: true %>
+      <%= f.submit "Add", class: "btn" %>
+    <% end %>
+  </section>
+
+  <section class="card" id="projects">
+    <h2>Projects</h2>
+    <ul class="plain list-rows">
+      <% @projects.each do |p| %>
+        <li>
+          <%= form_with model: p, url: settings_project_path(p), method: :patch, class: "inline-edit" do |f| %>
+            <%= f.color_field :color, "aria-label": "Color" %>
+            <%= f.text_field :name, "aria-label": "Name" %>
+            <label class="check-label small"><%= f.check_box :archived %> Archived</label>
+            <%= f.submit "Save", class: "btn small" %>
+          <% end %>
+          <%= button_to icon("trash", size: 15), settings_project_path(p), method: :delete, class: "btn small danger icon-btn", "aria-label": "Delete #{p.name}", form: { data: { turbo_confirm: "Delete “#{p.name}”? Its tasks are kept." } } %>
+        </li>
+      <% end %>
+    </ul>
+    <%= form_with url: settings_projects_path, scope: :project, class: "inline-add" do |f| %>
+      <%= f.color_field :color, value: "#5b8def", "aria-label": "Color" %>
+      <%= f.text_field :name, placeholder: "New project", required: true %>
+      <%= f.submit "Add", class: "btn" %>
+    <% end %>
+  </section>
+
+  <section class="card subtle">
+    <h2>About</h2>
+    <p class="muted small">Time zone: <%= Time.zone.tzinfo.name %> · Working hours <%= Organizer.day_start %>–<%= Organizer.day_end %> (set in .env).<br>
+    Modules: <%= OrganizerModules.all.map(&:module_name).join(", ") %>.</p>
+  </section>
+</div>

@@ -1,0 +1,41 @@
+<%# Locals: event, url, method, occurrence (optional), start (local time to show) %>
+<% start = local_assigns[:start] || event.local_start %>
+<% finish = start + event.duration %>
+<%= form_with model: event, url: url, method: method, scope: :event, class: "form", data: { controller: "event-form recurrence" } do |f| %>
+  <% if local_assigns[:occurrence] %><%= hidden_field_tag :occurrence, occurrence %><% end %>
+  <% if event.kind == "time_block" && event.task %>
+    <p class="block-note">Time block for <%= link_to event.task.title, edit_task_path(event.task) %>.</p>
+  <% else %>
+    <label>Title <%= f.text_field :title, required: true, autofocus: event.new_record? %></label>
+  <% end %>
+  <label class="check-label"><%= f.check_box :all_day, { checked: event.all_day, data: { action: "event-form#toggleAllDay", event_form_target: "allDay" } } %> All day</label>
+  <div class="row" data-event-form-target="timed" <%= "hidden" if event.all_day %>>
+    <label>Starts <%= f.datetime_field :start, value: start.strftime("%Y-%m-%dT%H:%M"), disabled: event.all_day, data: { event_form_target: "timedInput" } %></label>
+    <label>Ends <%= f.datetime_field :end, value: finish.strftime("%Y-%m-%dT%H:%M"), disabled: event.all_day, data: { event_form_target: "timedInput" } %></label>
+  </div>
+  <div class="row" data-event-form-target="dated" <%= "hidden" unless event.all_day %>>
+    <label>First day <%= f.date_field :start, value: start.to_date, disabled: !event.all_day, data: { event_form_target: "datedInput" } %></label>
+    <label>Last day <%= f.date_field :end, value: event.all_day ? (finish.to_date - 1) : start.to_date, disabled: !event.all_day, data: { event_form_target: "datedInput" } %></label>
+  </div>
+  <div class="row">
+    <label>Calendar <%= f.select :calendar_id, @calendars.map { |c| [c.name, c.id] }, selected: event.calendar_id %></label>
+    <label>Reminders (minutes before) <%= f.text_field :reminders, value: Array(event.reminders).join(", "), placeholder: "10, 60" %></label>
+  </div>
+  <% unless local_assigns[:occurrence] %>
+    <label>Repeats <%= f.select :recurrence, recurrence_options(event.recurrence), {}, data: { action: "recurrence#toggle", recurrence_target: "select" } %></label>
+    <label class="<%= 'hidden' if recurrence_preset?(event.recurrence) %>" data-recurrence-target="custom">Custom RRULE
+      <%= text_field_tag "event[recurrence_custom]", event.recurrence, placeholder: "FREQ=WEEKLY;BYDAY=TU,TH" %></label>
+  <% end %>
+  <% unless event.kind == "time_block" %>
+    <label>Location <%= f.text_field :location %></label>
+  <% end %>
+  <label>Notes <%= f.text_area :description, rows: 3 %></label>
+  <% if local_assigns[:occurrence] %>
+    <fieldset class="scope">
+      <legend>This is a repeating event (<%= describe_recurrence(event.recurrence) %>). Change:</legend>
+      <label class="check-label"><%= radio_button_tag :scope, "this", true %> Only this one</label>
+      <label class="check-label"><%= radio_button_tag :scope, "all", false %> All of them</label>
+    </fieldset>
+  <% end %>
+  <div class="actions"><%= f.submit "Save", class: "btn primary" %> <%= link_to "Cancel", calendar_path, class: "btn" %></div>
+<% end %>

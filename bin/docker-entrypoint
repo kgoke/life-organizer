@@ -1,0 +1,22 @@
+#!/bin/bash -e
+
+# Keep a secret key in the storage volume so sessions survive restarts, unless one is given.
+if [ -z "${SECRET_KEY_BASE}" ]; then
+  key_file="/rails/storage/secret_key_base"
+  if [ ! -s "$key_file" ]; then
+    umask 077
+    head -c 64 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$key_file"
+  fi
+  export SECRET_KEY_BASE="$(cat "$key_file")"
+fi
+
+if [ -z "${ADMIN_PASSWORD}" ]; then
+  echo "Warning: ADMIN_PASSWORD is not set, so nobody can sign in. Set it in .env." >&2
+fi
+
+# If running the rails server then create or migrate the database.
+if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
+  ./bin/rails db:prepare
+fi
+
+exec "${@}"

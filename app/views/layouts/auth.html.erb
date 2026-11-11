@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Life Organizer</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= stylesheet_link_tag :app %>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  </head>
+  <body class="auth">
+    <main class="auth-card">
+      <% if flash[:alert].present? %><div class="flash alert" role="alert"><%= flash[:alert] %></div><% end %>
+      <%= yield %>
+    </main>
+  </body>
+</html>

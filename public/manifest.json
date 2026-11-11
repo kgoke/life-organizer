@@ -1,0 +1,12 @@
+{
+  "name": "Life Organizer",
+  "short_name": "Organizer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#3b6ef5",
+  "icons": [
+    { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any" },
+    { "src": "/icon.png", "type": "image/png", "sizes": "512x512" }
+  ]
+}

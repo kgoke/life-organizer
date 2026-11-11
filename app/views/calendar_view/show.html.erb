@@ -1,0 +1,29 @@
+<% content_for :title, "Calendar" %>
+<div class="calendar-layout" data-controller="calendar"
+     data-calendar-events-url-value="<%= api_v1_events_path %>"
+     data-calendar-tasks-url-value="<%= api_v1_tasks_path %>"
+     data-calendar-new-url-value="<%= new_event_path %>"
+     data-calendar-date-value="<%= params[:date] %>"
+     data-calendar-view-value="<%= params[:view] %>"
+     data-calendar-day-start-value="<%= Organizer.day_start %>"
+     data-calendar-day-end-value="<%= Organizer.day_end %>">
+  <section class="card calendar-card">
+    <div data-calendar-target="calendar" class="calendar"></div>
+    <p class="muted small cal-hint">Drag a task onto the calendar to block time for it. Drag or stretch blocks to move them. Tap an empty time to add an event.</p>
+  </section>
+  <aside class="card unscheduled">
+    <h2>To schedule</h2>
+    <p class="muted small">Open tasks without a time block.</p>
+    <ul class="drag-list" data-calendar-target="tasks">
+      <% @unscheduled.each do |t| %>
+        <li class="drag-task" data-task-id="<%= t.id %>" data-title="<%= t.title %>" data-minutes="<%= t.estimate_minutes || 30 %>"
+            style="--chip: <%= t.project&.color || 'var(--accent)' %>">
+          <span class="grip" aria-hidden="true">⋮⋮</span>
+          <span class="drag-title"><%= t.title %></span>
+          <span class="muted small"><%= t.estimate_minutes || 30 %>m<% if t.due_date %> · <%= due_label(t) %><% end %></span>
+        </li>
+      <% end %>
+    </ul>
+    <% if @unscheduled.empty? %><p class="empty">Everything open has a time block.</p><% end %>
+  </aside>
+</div>

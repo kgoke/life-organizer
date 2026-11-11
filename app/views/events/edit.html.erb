@@ -1,0 +1,17 @@
+<% content_for :title, @event.display_title %>
+<div class="page-head"><h1><%= @event.kind == "time_block" ? "Time block" : "Edit event" %></h1></div>
+<section class="card narrow">
+  <%= render "events/form", event: @event, url: event_path(@event), method: :patch, occurrence: @occurrence, start: @occurrence_start %>
+</section>
+<section class="card narrow subtle">
+  <% if @occurrence %>
+    <div class="row-buttons">
+      <%= button_to "Delete this one", event_path(@event, occurrence: @occurrence, scope: "this"), method: :delete, class: "btn danger" %>
+      <%= button_to "Delete all", event_path(@event, scope: "all"), method: :delete, class: "btn danger",
+            form: { data: { turbo_confirm: "Delete every occurrence of “#{@event.display_title}”?" } } %>
+    </div>
+  <% else %>
+    <%= button_to(@event.kind == "time_block" ? "Remove time block" : "Delete event", event_path(@event), method: :delete, class: "btn danger",
+          form: { data: { turbo_confirm: "Delete “#{@event.display_title}”?" } }) %>
+  <% end %>
+</section>

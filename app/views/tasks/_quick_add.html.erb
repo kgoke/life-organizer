@@ -1,0 +1,12 @@
+<%# Locals: due_date (optional), projects %>
+<%= form_with url: tasks_path, scope: :task, class: "quick-add" do |f| %>
+  <%= f.text_field :title, placeholder: "Add a task…", required: true, autocomplete: "off", "aria-label": "New task" %>
+  <div class="quick-add-extra">
+    <%= f.date_field :due_date, value: local_assigns[:due_date], "aria-label": "Due date" %>
+    <%= f.select :priority, Task::PRIORITIES.map { |p| [p == "none" ? "Priority" : p.capitalize, p] }, {}, "aria-label": "Priority" %>
+    <% if projects.any? %>
+      <%= f.select :project_id, projects.map { |p| [p.name, p.id] }, { include_blank: "No project" }, "aria-label": "Project" %>
+    <% end %>
+    <%= f.submit "Add", class: "btn primary" %>
+  </div>
+<% end %>

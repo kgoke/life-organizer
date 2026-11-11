@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Make a consistent copy of the database, safe while the app is running.
+#   With Docker:  docker compose exec app bin/backup
+#   Directly:     bin/backup [destination-folder]
+# Backups land in storage/backups (inside the data volume) unless you give a folder.
+# The 30 newest are kept.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+db="${DATABASE_PATH:-storage/production.sqlite3}"
+dest="${1:-storage/backups}"
+[ -f "$db" ] || { echo "No database at $db" >&2; exit 1; }
+mkdir -p "$dest"
+file="$dest/organizer-$(date +%Y%m%d-%H%M%S).sqlite3"
+
+bundle exec ruby -rsqlite3 -e '
+  src = SQLite3::Database.new(ARGV[0], readonly: true)
+  dst = SQLite3::Database.new(ARGV[1])
+  backup = SQLite3::Backup.new(dst, "main", src, "main")
+  backup.step(-1)
+  backup.finish
+  abort "integrity check failed" unless dst.get_first_value("PRAGMA integrity_check") == "ok"
+' "$db" "$file"
+
+echo "Backed up to $file"
+ls -1t "$dest"/organizer-*.sqlite3 2>/dev/null | tail -n +31 | xargs -r rm --

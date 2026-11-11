@@ -1,0 +1,14 @@
+<div class="auth-logo"><%= icon("logo", size: 36) %></div>
+<h1>Allow <%= @client.name %> to use your organizer?</h1>
+<p class="muted">It will be able to read and change your tasks and calendar. You can disconnect it any time in Settings.</p>
+<% if flash.now[:alert] %><div class="flash alert"><%= flash.now[:alert] %></div><% end %>
+<%= form_with url: oauth_authorize_path, class: "form" do %>
+  <% @auth.each do |k, v| %><%= hidden_field_tag k, v %><% end %>
+  <% unless signed_in? %>
+    <label>App password <%= password_field_tag :password, nil, autofocus: true, autocomplete: "current-password" %></label>
+  <% end %>
+  <div class="row-buttons">
+    <%= button_tag "Deny", name: "decision", value: "deny", class: "btn" %>
+    <%= button_tag "Allow", name: "decision", value: "allow", class: "btn primary" %>
+  </div>
+<% end %>

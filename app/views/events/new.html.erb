@@ -1,0 +1,5 @@
+<% content_for :title, "New event" %>
+<div class="page-head"><h1>New event</h1></div>
+<section class="card narrow">
+  <%= render "events/form", event: @event, url: events_path, method: :post %>
+</section>

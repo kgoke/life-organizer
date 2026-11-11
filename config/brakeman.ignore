@@ -1,0 +1,19 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Redirect",
+      "fingerprint": "5eb815eda7aad10712bba9651ea4b87b9bc8e6ab008a2c9853c54fd67824d53d",
+      "file": "app/controllers/oauth/authorizations_controller.rb",
+      "line": 28,
+      "note": "OAuth redirect to the client redirect_uri; OauthFlow.validate_authorize! has already checked it exactly against the URIs the client registered."
+    },
+    {
+      "warning_type": "Redirect",
+      "fingerprint": "ada50486cfd1cafc80ff85463ebb0bfdb9a733901de4f9b019c46a1d55e37e39",
+      "file": "app/controllers/oauth/authorizations_controller.rb",
+      "line": 35,
+      "note": "OAuth redirect to the client redirect_uri; OauthFlow.validate_authorize! has already checked it exactly against the URIs the client registered."
+    }
+  ],
+  "brakeman_version": "8.1.0"
+}

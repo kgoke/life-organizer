@@ -1,0 +1,36 @@
+<% content_for :title, "Tasks" %>
+<div class="page-head">
+  <h1>Tasks</h1>
+  <%= form_with url: tasks_path, method: :get, class: "search", data: { turbo_action: "replace" } do %>
+    <%= hidden_field_tag :filter, @filter %>
+    <%= search_field_tag :q, params[:q], placeholder: "Search", "aria-label": "Search tasks" %>
+  <% end %>
+</div>
+
+<%= render "tasks/quick_add", projects: @projects %>
+
+<nav class="tabs" aria-label="Task filters">
+  <% { "open" => "All open", "today" => "Today", "upcoming" => "Upcoming", "someday" => "No date", "done" => "Done" }.each do |key, label| %>
+    <%= link_to label, tasks_path(filter: key, project_id: params[:project_id], tag: params[:tag]), class: ("active" if @filter == key) %>
+  <% end %>
+</nav>
+
+<div class="filter-row">
+  <% if @projects.any? %>
+    <%= link_to "All projects", tasks_path(filter: @filter, tag: params[:tag]), class: "chip-link #{'active' if params[:project_id].blank?}" %>
+    <% @projects.each do |p| %>
+      <%= link_to p.name, tasks_path(filter: @filter, project_id: p.id, tag: params[:tag]), class: "chip-link #{'active' if params[:project_id].to_s == p.id.to_s}", style: "--chip: #{p.color}" %>
+    <% end %>
+  <% end %>
+  <% @tags.first(12).each do |t| %>
+    <%= link_to "##{t}", tasks_path(filter: @filter, project_id: params[:project_id], tag: (params[:tag] == t ? nil : t)), class: "tag-link #{'active' if params[:tag] == t}" %>
+  <% end %>
+</div>
+
+<section class="card">
+  <% if @tasks.empty? %>
+    <p class="empty"><%= @filter == "done" ? "Nothing finished yet." : "Nothing here. Add a task above." %></p>
+  <% else %>
+    <ul class="task-list"><%= render partial: "tasks/task", collection: @tasks, as: :task %></ul>
+  <% end %>
+</section>

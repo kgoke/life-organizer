@@ -1,0 +1,62 @@
+<% content_for :title, "Today" %>
+<div class="page-head">
+  <div>
+    <h1><%= @day == Time.zone.today ? "Today" : @day.strftime("%A") %></h1>
+    <p class="muted"><%= @day.strftime("%A, %B %-d") %></p>
+  </div>
+  <div class="day-nav">
+    <%= link_to "‹", root_path(date: @day - 1), class: "btn icon-btn", "aria-label": "Previous day" %>
+    <% unless @day == Time.zone.today %><%= link_to "Today", root_path, class: "btn" %><% end %>
+    <%= link_to "›", root_path(date: @day + 1), class: "btn icon-btn", "aria-label": "Next day" %>
+  </div>
+</div>
+
+<%= render "tasks/quick_add", due_date: @day, projects: @projects %>
+
+<div class="today-grid">
+  <section class="card">
+    <h2>Schedule</h2>
+    <% if @schedule.empty? %>
+      <p class="empty">Nothing scheduled. <%= link_to "Plan your day on the calendar", calendar_path(date: @day, view: "timeGridDay") %>.</p>
+    <% else %>
+      <ol class="timeline">
+        <% @schedule.each do |ev, start| %>
+          <% finish = start + ev.duration %>
+          <li class="timeline-item <%= ev.kind %> <%= 'is-past' if finish < Time.current %> <%= 'is-done' if ev.task&.done? %>" style="--ev: <%= ev.display_color %>">
+            <span class="when"><%= time_range(start, finish, all_day: ev.all_day) %></span>
+            <%= link_to ev.display_title, edit_event_path(ev, occurrence: (start.iso8601 if ev.recurring?)), class: "what" %>
+            <% if ev.kind == "time_block" && ev.task %>
+              <span class="badge block">Focus</span>
+            <% end %>
+            <% if ev.location.present? %><span class="muted where"><%= icon("pin", size: 13) %> <%= ev.location %></span><% end %>
+          </li>
+        <% end %>
+      </ol>
+    <% end %>
+    <% if @free.any? %>
+      <p class="free-time"><strong>Open time:</strong>
+        <%= safe_join(@free.first(4).map { |s| "#{Time.iso8601(s[:start]).in_time_zone.strftime('%-l:%M')}–#{Time.iso8601(s[:end]).in_time_zone.strftime('%-l:%M %p')}" }, ", ") %>
+        · <%= link_to "Time-block tasks", calendar_path(date: @day, view: "timeGridDay") %>
+      </p>
+    <% end %>
+  </section>
+
+  <section class="card">
+    <% if @overdue.any? %>
+      <h2 class="overdue-head">Overdue <span class="count"><%= @overdue.size %></span></h2>
+      <ul class="task-list"><%= render partial: "tasks/task", collection: @overdue, as: :task %></ul>
+    <% end %>
+    <h2>Due <%= @day == Time.zone.today ? "today" : @day.strftime("%a %b %-d") %> <span class="count"><%= @due.size %></span></h2>
+    <% if @due.empty? %>
+      <p class="empty">No tasks due.</p>
+    <% else %>
+      <ul class="task-list"><%= render partial: "tasks/task", collection: @due, as: :task %></ul>
+    <% end %>
+    <% if @done_today.any? %>
+      <details class="done-today">
+        <summary>Done <%= @day == Time.zone.today ? "today" : "this day" %> (<%= @done_today.size %>)</summary>
+        <ul class="task-list"><%= render partial: "tasks/task", collection: @done_today, as: :task %></ul>
+      </details>
+    <% end %>
+  </section>
+</div>

@@ -1,0 +1,21 @@
+<%# A task row with a check-off button. Locals: task, return_to (optional) %>
+<li class="task-row <%= 'is-done' if task.done? %> <%= 'is-overdue' if task.overdue? %>" id="<%= dom_id(task) %>">
+  <%= button_to toggle_task_path(task), method: :post, class: "check #{'checked' if task.done?}", form_class: "check-form",
+        title: task.done? ? "Mark not done" : "Mark done", "aria-label": task.done? ? "Mark not done" : "Mark done" do %>
+    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 12l5 5 9-10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <% end %>
+  <a class="task-main" href="<%= edit_task_path(task) %>">
+    <span class="task-title"><%= task.title %></span>
+    <span class="task-meta">
+      <%= due_label(task) %>
+      <%= priority_badge(task) %>
+      <% if task.project %><span class="chip" style="--chip: <%= task.project.color %>"><%= task.project.name %></span><% end %>
+      <% task.tags.each do |tag| %><span class="tag">#<%= tag %></span><% end %>
+      <% if task.recurrence %><span class="muted" title="<%= describe_recurrence(task.recurrence) %>"><%= icon("repeat", size: 13) %></span><% end %>
+      <% if task.estimate_minutes %><span class="muted"><%= icon("clock", size: 13) %> <%= task.estimate_minutes %>m</span><% end %>
+      <% if task.time_blocks.any? %><span class="muted">Blocked <%= task.time_blocks.first.local_start.strftime("%a %-l:%M %p") %></span><% end %>
+      <% open_subs = task.subtasks.count { |s| s.open? } %>
+      <% if task.subtasks.any? %><span class="muted"><%= task.subtasks.size - open_subs %>/<%= task.subtasks.size %> subtasks</span><% end %>
+    </span>
+  </a>
+</li>

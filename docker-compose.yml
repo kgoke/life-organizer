@@ -1,0 +1,29 @@
+# Life Organizer: `cp .env.example .env`, edit it, then `docker compose up -d`.
+services:
+  app:
+    build: .
+    image: life-organizer:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_PATH: /rails/storage/production.sqlite3
+    ports:
+      # Listens on this machine only. Reach it from outside through the tunnel below,
+      # Tailscale, or a reverse proxy with HTTPS. Change to "3000:80" to open it on your LAN.
+      - "127.0.0.1:${HOST_PORT:-3000}:80"
+    volumes:
+      - organizer-data:/rails/storage
+
+  # Optional: a Cloudflare Tunnel gives the app an https:// address without opening ports.
+  # Start it with `docker compose --profile tunnel up -d` after setting CLOUDFLARE_TUNNEL_TOKEN.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: [ tunnel ]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on: [ app ]
+
+volumes:
+  organizer-data:

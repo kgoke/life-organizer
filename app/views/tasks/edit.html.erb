@@ -1,0 +1,68 @@
+<% content_for :title, @task.title %>
+<div class="page-head">
+  <div>
+    <% if @task.parent %><p class="crumb"><%= link_to "‹ #{@task.parent.title}", edit_task_path(@task.parent) %></p><% else %><p class="crumb"><%= link_to "‹ Tasks", tasks_path %></p><% end %>
+    <h1 class="task-heading <%= 'is-done' if @task.done? %>"><%= @task.title %></h1>
+  </div>
+  <%= button_to(@task.done? ? "Mark not done" : "Mark done", toggle_task_path(@task), class: "btn #{'primary' unless @task.done?}") %>
+</div>
+
+<div class="edit-grid">
+  <section class="card">
+    <%= form_with model: @task, class: "form" do |f| %>
+      <label>Title <%= f.text_field :title, required: true %></label>
+      <div class="row">
+        <label>Due date <%= f.date_field :due_date %></label>
+        <label>Time <%= f.time_field :due_time %></label>
+      </div>
+      <div class="row">
+        <label>Priority <%= f.select :priority, Task::PRIORITIES.map { |p| [p.capitalize, p] }, selected: @task.priority_name %></label>
+        <label>Status <%= f.select :status, Task::STATUSES.map { |s| [s.humanize, s] } %></label>
+      </div>
+      <div class="row">
+        <label>Project <%= f.select :project_id, @projects.map { |p| [p.name, p.id] }, include_blank: "None" %></label>
+        <label>Estimate (minutes) <%= f.number_field :estimate_minutes, min: 1, step: 5 %></label>
+      </div>
+      <label>Tags <%= f.text_field :tags, value: @task.tags.join(", "), placeholder: "errands, home" %></label>
+      <div data-controller="recurrence">
+        <label>Repeats <%= f.select :recurrence, recurrence_options(@task.recurrence), {}, data: { action: "recurrence#toggle", recurrence_target: "select" } %></label>
+        <label class="<%= 'hidden' if recurrence_preset?(@task.recurrence) %>" data-recurrence-target="custom">Custom RRULE
+          <%= text_field_tag "task[recurrence_custom]", @task.recurrence, placeholder: "FREQ=WEEKLY;BYDAY=MO,TH" %></label>
+      </div>
+      <label>Notes <%= f.text_area :notes, rows: 5 %></label>
+      <div class="actions"><%= f.submit "Save", class: "btn primary" %></div>
+    <% end %>
+  </section>
+
+  <aside>
+    <section class="card">
+      <h2>Subtasks</h2>
+      <ul class="task-list compact"><%= render partial: "tasks/task", collection: @task.subtasks, as: :task %></ul>
+      <%= form_with url: tasks_path, scope: :task, class: "inline-add" do |f| %>
+        <%= f.hidden_field :parent_id, value: @task.id %>
+        <%= f.hidden_field :project_id, value: @task.project_id %>
+        <%= f.text_field :title, placeholder: "Add a subtask…", required: true, autocomplete: "off" %>
+        <%= f.submit "Add", class: "btn" %>
+      <% end %>
+    </section>
+
+    <section class="card">
+      <h2>Time blocks</h2>
+      <% if @task.time_blocks.empty? %>
+        <p class="empty">Not scheduled yet. Drag it onto the <%= link_to "calendar", calendar_path %> to block time for it.</p>
+      <% else %>
+        <ul class="plain">
+          <% @task.time_blocks.each do |b| %>
+            <li><%= link_to "#{b.local_start.strftime('%a %b %-d')}, #{time_range(b.local_start, b.local_end)}", edit_event_path(b) %></li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="card subtle">
+      <p class="muted small">Created <%= time_ago_in_words(@task.created_at) %> ago<% if @task.completed_at %> · done <%= time_ago_in_words(@task.completed_at) %> ago<% end %></p>
+      <%= button_to "Delete task", task_path(@task), method: :delete, class: "btn danger",
+            form: { data: { turbo_confirm: "Delete “#{@task.title}”#{' and its subtasks' if @task.subtasks.any?}?" } } %>
+    </section>
+  </aside>
+</div>
