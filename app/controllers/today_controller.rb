@@ -8,5 +8,7 @@ class TodayController < ApplicationController
     @done_today = Task.where(status: "done", completed_at: @day.in_time_zone.all_day).order(completed_at: :desc)
     @free = CalendarQuery.free_slots(@day, min_minutes: 30)
     @projects = Project.active.ordered
+    @jots = Jot.ordered.limit(5)
+    @jot_count = Jot.count
   end
 end

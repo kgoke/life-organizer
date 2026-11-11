@@ -6,6 +6,7 @@
   <% end %>
   <a class="task-main" href="<%= edit_task_path(task) %>">
     <span class="task-title"><%= task.title %></span>
+    <% if task.notes.present? %><span class="task-notes"><%= task.notes.squish.truncate(120) %></span><% end %>
     <span class="task-meta">
       <%= due_label(task) %>
       <%= priority_badge(task) %>

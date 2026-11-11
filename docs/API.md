@@ -82,6 +82,19 @@ keeps its length.
 `PATCH /api/v1/calendars/:id` (also `is_default: true`), `DELETE /api/v1/calendars/:id`
 (not the default one; its events are deleted).
 
+## Jots
+
+Quick notes to sort out later.
+
+| Method and path | What it does |
+| --- | --- |
+| `GET /api/v1/jots?q=` | List jots, pinned first, then most recently changed. |
+| `GET /api/v1/jots/:id` | One jot. |
+| `POST /api/v1/jots` | Create: `{body, pinned?}`. |
+| `PATCH /api/v1/jots/:id` | Update `body` or `pinned`. |
+| `DELETE /api/v1/jots/:id` | Delete. |
+| `POST /api/v1/jots/:id/convert` | Turn it into a task and remove the jot. The first line becomes the title and the rest the notes, unless you send `title` or `notes`. Accepts any task field, plus `schedule_start` and `duration_minutes` to time-block the new task. Returns `{task, time_block}`. |
+
 ## Planning
 
 | Method and path | What it does |
@@ -111,8 +124,8 @@ on every use.
 
 ### MCP tools
 
-Required arguments are in bold. Read-only tools are marked as such, and `delete_task` and
-`delete_event` are marked destructive, so Claude's apps can ask you before they run.
+Required arguments are in bold. Read-only tools are marked as such, and `delete_task`,
+`delete_event` and `delete_jot` are marked destructive, so Claude's apps can ask you before they run.
 
 | Tool | What it does | Arguments |
 | --- | --- | --- |
@@ -133,4 +146,9 @@ Required arguments are in bold. Read-only tools are marked as such, and `delete_
 | `find_free_time` | Open slots on a day between events and time blocks, within working hours. For today, slots | date, min_minutes, day_start, day_end |
 | `list_calendars` | List calendars. Events go to the default calendar unless one is named. |  |
 | `create_calendar` | Create a calendar (e.g. Work, Family). | **name**, color |
+| `list_jots` | List the owner's jots, pinned first, then newest. | search, limit |
+| `add_jot` | Jot down a quick note for the owner to sort out later. | **body**, pinned |
+| `update_jot` | Change a jot's text or pin it. | **jot_id**, body, pinned |
+| `convert_jot_to_task` | Turn a jot into a task, optionally time-blocked. | **jot_id**, title, notes, due_date, due_time, priority, project, tags, estimate_minutes, schedule_start, duration_minutes |
+| `delete_jot` | Delete a jot for good. | **jot_id** |
 | `get_agenda` | The owner's plan: for each day from date (default today) for `days` days, the events, time | date, days |

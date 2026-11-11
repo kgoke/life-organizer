@@ -7,11 +7,14 @@ module Mcp
     VERSION = "0.1.0".freeze
 
     INSTRUCTIONS = <<~TEXT.freeze
-      This is the owner's personal life organizer: their tasks and calendar. Times without an
-      offset are in the owner's time zone (get_agenda shows it and the current time). Start with
-      get_agenda to see the day. The owner plans by time-blocking: to plan work, find open time
-      with find_free_time and reserve it with schedule_task. Prefer completing or cancelling tasks
-      over deleting them, and only delete events when the owner asks.
+      This is the owner's personal life organizer: their tasks, calendar and jots (quick notes to
+      sort out later). Times without an offset are in the owner's time zone (get_agenda shows it
+      and the current time). Start with get_agenda to see the day. The owner plans by
+      time-blocking: to plan work, find open time with find_free_time and reserve it with
+      schedule_task. The owner keeps notes on tasks, so read a task's notes before working on it
+      and add to them rather than replacing them. A jot that is really a to-do can become a task
+      with convert_jot_to_task. Prefer completing or cancelling tasks over deleting them, and only
+      delete events or jots when the owner asks.
     TEXT
 
     def initialize(tools)

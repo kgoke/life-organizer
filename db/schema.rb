@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_11_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_11_000003) do
   create_table "api_keys", force: :cascade do |t|
     t.string "name", null: false
     t.string "prefix", null: false
@@ -62,6 +62,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_000002) do
     t.index ["series_ends_at"], name: "index_events_on_series_ends_at"
     t.index ["starts_at"], name: "index_events_on_starts_at"
     t.index ["task_id"], name: "index_events_on_task_id"
+  end
+
+  create_table "jots", force: :cascade do |t|
+    t.text "body", null: false
+    t.boolean "pinned", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pinned", "updated_at"], name: "index_jots_on_pinned_and_updated_at"
   end
 
   create_table "oauth_authorization_codes", force: :cascade do |t|

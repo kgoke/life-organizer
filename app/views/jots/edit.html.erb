@@ -1,0 +1,39 @@
+<% content_for :title, "Jot" %>
+<div class="page-head">
+  <div>
+    <p class="crumb"><%= link_to "‹ Jots", jots_path %></p>
+    <h1><%= @jot.title_line %></h1>
+  </div>
+</div>
+
+<div class="edit-grid">
+  <section class="card">
+    <%= form_with model: @jot, class: "form" do |f| %>
+      <label>Jot <%= f.text_area :body, rows: 10, required: true %></label>
+      <label class="check-label"><%= f.check_box :pinned %> Pin to the top</label>
+      <div class="actions"><%= f.submit "Save", class: "btn primary" %></div>
+    <% end %>
+  </section>
+
+  <aside>
+    <section class="card">
+      <h2>Make it a task</h2>
+      <p class="muted small">The first line becomes the title and the rest goes into the task's notes. The jot is removed.</p>
+      <%= form_with url: convert_jot_path(@jot), scope: :task, class: "form" do |f| %>
+        <label>Title <%= f.text_field :title, value: @jot.title_line %></label>
+        <div class="row">
+          <label>Due date <%= f.date_field :due_date %></label>
+          <label>Priority <%= f.select :priority, Task::PRIORITIES.map { |p| [ p.capitalize, p ] } %></label>
+        </div>
+        <% if @projects.any? %>
+          <label>Project <%= f.select :project_id, @projects.map { |p| [ p.name, p.id ] }, include_blank: "None" %></label>
+        <% end %>
+        <div class="actions"><%= f.submit "Make task", class: "btn primary" %></div>
+      <% end %>
+    </section>
+    <section class="card subtle">
+      <p class="muted small">Jotted <%= time_ago_in_words(@jot.created_at) %> ago</p>
+      <%= button_to "Delete jot", jot_path(@jot), method: :delete, class: "btn danger", form: { data: { turbo_confirm: "Delete this jot?" } } %>
+    </section>
+  </aside>
+</div>

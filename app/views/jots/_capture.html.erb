@@ -1,0 +1,9 @@
+<%# The quick jot box. Ctrl/Cmd+Enter saves. %>
+<%= form_with model: Jot.new, class: "jot-capture", data: { controller: "jot-capture" } do |f| %>
+  <%= f.text_area :body, rows: 2, placeholder: "Jot something down… (first line becomes the title if you make it a task)",
+        required: true, "aria-label": "New jot", data: { jot_capture_target: "input", action: "keydown->jot-capture#keydown input->jot-capture#grow" } %>
+  <div class="jot-capture-actions">
+    <span class="muted small hide-phone">Ctrl+Enter to save</span>
+    <%= f.submit "Jot it", class: "btn primary" %>
+  </div>
+<% end %>

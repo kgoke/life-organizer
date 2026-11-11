@@ -11,6 +11,7 @@
   <section class="card">
     <%= form_with model: @task, class: "form" do |f| %>
       <label>Title <%= f.text_field :title, required: true %></label>
+      <label>Notes <%= f.text_area :notes, rows: 8, placeholder: "Details, links, ideas…" %></label>
       <div class="row">
         <label>Due date <%= f.date_field :due_date %></label>
         <label>Time <%= f.time_field :due_time %></label>
@@ -29,7 +30,6 @@
         <label class="<%= 'hidden' if recurrence_preset?(@task.recurrence) %>" data-recurrence-target="custom">Custom RRULE
           <%= text_field_tag "task[recurrence_custom]", @task.recurrence, placeholder: "FREQ=WEEKLY;BYDAY=MO,TH" %></label>
       </div>
-      <label>Notes <%= f.text_area :notes, rows: 5 %></label>
       <div class="actions"><%= f.submit "Save", class: "btn primary" %></div>
     <% end %>
   </section>

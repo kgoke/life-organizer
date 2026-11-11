@@ -24,9 +24,13 @@
           <% finish = start + ev.duration %>
           <li class="timeline-item <%= ev.kind %> <%= 'is-past' if finish < Time.current %> <%= 'is-done' if ev.task&.done? %>" style="--ev: <%= ev.display_color %>">
             <span class="when"><%= time_range(start, finish, all_day: ev.all_day) %></span>
-            <%= link_to ev.display_title, edit_event_path(ev, occurrence: (start.iso8601 if ev.recurring?)), class: "what" %>
             <% if ev.kind == "time_block" && ev.task %>
+              <%= link_to ev.display_title, edit_task_path(ev.task), class: "what" %>
               <span class="badge block">Focus</span>
+              <% if ev.task.notes.present? %><span class="muted small where"><%= ev.task.notes.squish.truncate(100) %></span><% end %>
+            <% else %>
+              <%= link_to ev.display_title, edit_event_path(ev, occurrence: (start.iso8601 if ev.recurring?)), class: "what" %>
+              <% if ev.description.present? %><span class="muted small where"><%= ev.description.squish.truncate(100) %></span><% end %>
             <% end %>
             <% if ev.location.present? %><span class="muted where"><%= icon("pin", size: 13) %> <%= ev.location %></span><% end %>
           </li>
@@ -57,6 +61,14 @@
         <summary>Done <%= @day == Time.zone.today ? "today" : "this day" %> (<%= @done_today.size %>)</summary>
         <ul class="task-list"><%= render partial: "tasks/task", collection: @done_today, as: :task %></ul>
       </details>
+    <% end %>
+  </section>
+
+  <section class="card jots-card">
+    <h2>Jots <span class="count"><%= @jot_count %></span> <%= link_to "All jots", jots_path, class: "small head-link" %></h2>
+    <%= render "jots/capture" %>
+    <% if @jots.any? %>
+      <ul class="jot-list compact"><%= render partial: "jots/jot", collection: @jots, as: :jot, locals: { compact: true } %></ul>
     <% end %>
   </section>
 </div>

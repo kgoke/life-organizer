@@ -65,7 +65,7 @@ class ApiTest < ActionDispatch::IntegrationTest
       assert_equal "2026-11-11T10:00:00-05:00", free.first["start"]
       info = api(:get, "/api/v1/connection")
       assert_equal "https://organizer.example.test/mcp", info["mcp_url"]
-      assert_equal %w[tasks calendar agenda], api(:get, "/api/v1/modules").map { |m| m["name"] }
+      assert_equal %w[tasks calendar jots agenda], api(:get, "/api/v1/modules").map { |m| m["name"] }
     end
   end
 

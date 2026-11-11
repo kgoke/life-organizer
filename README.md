@@ -6,8 +6,14 @@ bigger life organizer, so it's built from modules that are easy to add to.
 - **Tasks:** notes, due dates and times, priorities, tags, projects, subtasks and repeats.
 - **Calendar:** events, all-day events, repeats (with "just this one" edits), reminders,
   day, week, month and list views, and your tasks shown on it.
-- **Time blocking:** drag a task onto the calendar to reserve time for it. Drag or stretch
-  the block to move it. Ask Claude to "find two free hours for the report" and it can do the same.
+- **Time blocking:** the calendar shades the free spaces in your working day. Drag a task (or a
+  jot) from the side list into a gap to reserve time for it, and drag or stretch the block to
+  move it. Ask Claude to "find two free hours for the report" and it can do the same.
+- **Notes everywhere:** every task has notes, shown on the task list, the Today schedule and the
+  calendar's side list. Tapping a time block opens its task and notes.
+- **Jots:** a quick jot box on the Today page and a Jots tab for thoughts to sort out later. One
+  tap turns a jot into a task (the first line becomes the title, the rest its notes), or drop it
+  straight onto the calendar.
 - **Works on a phone:** a responsive web app with a bottom tab bar, light and dark themes, and
   "Add to Home Screen" support.
 - **Claude connector:** an MCP server at `/mcp`, with OAuth sign-in for claude.ai and API keys for

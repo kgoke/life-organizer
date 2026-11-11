@@ -14,6 +14,11 @@ Rails.application.routes.draw do
   end
   resource :calendar, only: :show, controller: "calendar_view"
   resources :events, only: %i[new create edit update destroy]
+  resources :jots, only: %i[index create edit update destroy] do
+    member do
+      post :convert
+    end
+  end
 
   resource :settings, only: :show
   namespace :settings do
@@ -37,6 +42,11 @@ Rails.application.routes.draw do
       resources :projects, only: %i[index create update destroy]
       resources :events, only: %i[index show create update destroy]
       resources :calendars, only: %i[index create update destroy]
+      resources :jots, only: %i[index show create update destroy] do
+        member do
+          post :convert
+        end
+      end
       get "agenda", to: "agenda#show"
       get "free_time", to: "agenda#free_time"
       get "connection", to: "connection#show"

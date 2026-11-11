@@ -1,0 +1,18 @@
+<% content_for :title, "Jots" %>
+<div class="page-head">
+  <div>
+    <h1>Jots</h1>
+    <p class="muted">Quick notes to sort out later. Make one a task when it's ready, or drag it onto the calendar.</p>
+  </div>
+  <%= form_with url: jots_path, method: :get, class: "search" do %>
+    <%= search_field_tag :q, params[:q], placeholder: "Search jots", "aria-label": "Search jots" %>
+  <% end %>
+</div>
+
+<%= render "jots/capture" %>
+
+<% if @jots.empty? %>
+  <p class="empty"><%= params[:q].present? ? "No jots match." : "Nothing jotted yet." %></p>
+<% else %>
+  <ul class="jot-list"><%= render partial: "jots/jot", collection: @jots, as: :jot %></ul>
+<% end %>

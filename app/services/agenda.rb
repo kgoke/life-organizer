@@ -19,7 +19,8 @@ module Agenda
     end
     result = {
       now: Time.zone.now.change(usec: 0).iso8601, time_zone: Time.zone.tzinfo.name,
-      working_hours: { start: Organizer.day_start, end: Organizer.day_end }, days: out
+      working_hours: { start: Organizer.day_start, end: Organizer.day_end }, days: out,
+      jots_count: Jot.count
     }
     if first_day <= Time.zone.today
       result[:overdue_tasks] = Task.open_tasks.where("due_date < ?", Time.zone.today).includes(:project).agenda_order.map { |t| t.as_api_json(depth: 0) }

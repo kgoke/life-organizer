@@ -1,0 +1,19 @@
+<%# One jot with its actions. Locals: jot, compact (optional) %>
+<li class="jot <%= 'is-pinned' if jot.pinned %>" id="<%= dom_id(jot) %>">
+  <a class="jot-body" href="<%= edit_jot_path(jot) %>">
+    <strong class="jot-title"><%= jot.title_line %></strong>
+    <% if jot.rest.present? %>
+      <span class="jot-rest"><%= local_assigns[:compact] ? jot.rest.truncate(140) : jot.rest %></span>
+    <% end %>
+    <span class="muted small"><%= jot.pinned ? "Pinned · " : "" %><%= time_ago_in_words(jot.updated_at) %> ago</span>
+  </a>
+  <div class="jot-actions">
+    <%= button_to "Make task", convert_jot_path(jot), class: "btn small primary", params: { stay: (local_assigns[:compact] ? "1" : nil) }.compact %>
+    <% unless local_assigns[:compact] %>
+      <%= button_to(jot.pinned ? "Unpin" : "Pin", jot_path(jot), method: :patch, class: "btn small",
+            params: { jot: { pinned: !jot.pinned }, return_to: jots_path }) %>
+      <%= button_to jot_path(jot), method: :delete, class: "btn small icon-btn danger", "aria-label": "Delete jot",
+            form: { data: { turbo_confirm: "Delete this jot?" } } do %><%= icon("trash", size: 15) %><% end %>
+    <% end %>
+  </div>
+</li>

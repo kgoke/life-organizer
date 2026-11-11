@@ -4,10 +4,11 @@ Life Organizer is meant to grow past tasks and calendar into habits, notes, fina
 Each area is a **module**: ordinary Rails models, controllers and views, plus a small Ruby
 module that tells the app which MCP tools and navigation tab the area adds.
 
-Today there are three:
+Today there are four:
 
 - `TasksModule` (`app/organizer_modules/tasks_module.rb`): the Tasks tab and the task tools.
 - `CalendarModule` (`calendar_module.rb`): the Calendar tab and the event and time-block tools.
+- `JotsModule` (`jots_module.rb`): the Jots tab and the jot tools, including turning a jot into a task.
 - `AgendaModule` (`agenda_module.rb`): the Today tab and `get_agenda`, which reads across modules.
 
 ## Steps, using "habits" as the example
@@ -60,7 +61,7 @@ Today there are three:
 
    ```ruby
    def all
-     [TasksModule, CalendarModule, HabitsModule, AgendaModule]
+     [ TasksModule, CalendarModule, JotsModule, HabitsModule, AgendaModule ]
    end
    ```
 
@@ -78,4 +79,5 @@ Today there are three:
    (see `test/integration/mcp_test.rb`).
 
 Keep the phone in mind: an icon for the tab (add one to `ICONS` in `ApplicationHelper`), short
-labels, and at most five tabs in the bottom bar.
+labels, and at most five tabs in the bottom bar. There are five today (Today, Tasks, Calendar, Jots,
+Settings), so a new module's tab should replace one or live inside another page.

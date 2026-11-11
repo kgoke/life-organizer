@@ -6,7 +6,7 @@ module OrganizerModules
   module_function
 
   def all
-    [ TasksModule, CalendarModule, AgendaModule ]
+    [ TasksModule, CalendarModule, JotsModule, AgendaModule ]
   end
 
   def tools

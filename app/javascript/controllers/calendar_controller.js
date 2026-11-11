@@ -1,13 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 
 // The calendar page: FullCalendar (loaded as a global script) wired to the JSON API.
-// - drag a task from the side list onto the calendar to create a time block
+// - shaded "Free" background spaces show the open time within working hours
+// - drag a task (or a jot, which becomes a task) from the side list onto the calendar to block time
 // - drag or resize events and blocks to move them (repeating events: just that occurrence)
 // - drag a "Due" chip into a time slot to block time for that task
 // - click an empty slot to add an event; click an event to edit it
 export default class extends Controller {
   static targets = ["calendar", "tasks"]
-  static values = { eventsUrl: String, tasksUrl: String, newUrl: String, date: String, view: String, dayStart: String, dayEnd: String }
+  static values = { eventsUrl: String, tasksUrl: String, jotsUrl: String, newUrl: String, date: String, view: String, dayStart: String, dayEnd: String }
 
   connect() {
     if (!window.FullCalendar) return
@@ -22,7 +23,7 @@ export default class extends Controller {
           title: el.dataset.title,
           duration: { minutes: parseInt(el.dataset.minutes || "30", 10) },
           create: false,
-          extendedProps: { taskId: el.dataset.taskId },
+          extendedProps: { taskId: el.dataset.taskId, jotId: el.dataset.jotId },
         }),
       })
     }
@@ -35,6 +36,7 @@ export default class extends Controller {
         : { left: "prev,next today", center: "title", right: "timeGridDay,timeGridWeek,dayGridMonth,listWeek" },
       buttonText: { today: "Today", day: "Day", week: "Week", month: "Month", list: "List" },
       height: "auto",
+      lazyFetching: false,
       nowIndicator: true,
       firstDay: 1,
       editable: true,
@@ -81,7 +83,7 @@ export default class extends Controller {
       end: e.end,
       allDay: e.all_day,
       color: e.color,
-      extendedProps: { eventId: e.id, occurrence: e.occurrence, kind: e.kind, recurring: e.recurring, done: e.task_status === "done" },
+      extendedProps: { eventId: e.id, occurrence: e.occurrence, kind: e.kind, recurring: e.recurring, taskId: e.task_id, done: e.task_status === "done" },
     }))
     tasks.forEach((t) => {
       const timed = !!t.due_time
@@ -96,7 +98,44 @@ export default class extends Controller {
         extendedProps: { kind: "due", taskId: t.id, minutes: t.estimate_minutes || 30 },
       })
     })
+    if (this.calendar?.view.type.startsWith("timeGrid")) items.push(...this.freeGaps(info, items))
     return items
+  }
+
+  // Background "Free" spaces: working hours minus timed events and blocks, 15 minutes or longer.
+  freeGaps(info, items) {
+    const [sh, sm] = (this.dayStartValue || "08:00").split(":").map(Number)
+    const [eh, em] = (this.dayEndValue || "18:00").split(":").map(Number)
+    const busy = items
+      .filter((i) => !i.allDay && i.end && i.extendedProps.kind !== "due")
+      .map((i) => [new Date(i.start), new Date(i.end)])
+      .sort((a, b) => a[0] - b[0])
+    const gaps = []
+    const now = new Date()
+    for (let day = new Date(info.start); day < info.end; day.setDate(day.getDate() + 1)) {
+      const dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate(), sh, sm)
+      const dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), eh, em)
+      if (dayEnd <= now) continue
+      let cursor = dayStart < now ? new Date(Math.ceil(now / 900e3) * 900e3) : dayStart
+      const push = (from, to) => {
+        const minutes = Math.round((to - from) / 60000)
+        if (minutes >= 15) gaps.push({ start: from, end: to, display: "background", classNames: ["fc-free"], title: `Free ${this.duration(minutes)}`, extendedProps: { kind: "free" } })
+      }
+      for (const [s, e] of busy) {
+        if (e <= cursor || s >= dayEnd) continue
+        if (s > cursor) push(cursor, s)
+        if (e > cursor) cursor = new Date(e)
+        if (cursor >= dayEnd) break
+      }
+      if (cursor < dayEnd) push(cursor, dayEnd)
+    }
+    return gaps
+  }
+
+  duration(minutes) {
+    const h = Math.floor(minutes / 60)
+    const m = minutes % 60
+    return h && m ? `${h}h ${m}m` : h ? `${h}h` : `${m}m`
   }
 
   newEvent(info) {
@@ -108,7 +147,8 @@ export default class extends Controller {
   open(info) {
     info.jsEvent.preventDefault()
     const p = info.event.extendedProps
-    if (p.kind === "due") return Turbo.visit(`/tasks/${p.taskId}/edit`)
+    if (p.kind === "free") return
+    if (p.kind === "due" || (p.kind === "time_block" && p.taskId)) return Turbo.visit(`/tasks/${p.taskId}/edit`)
     const q = p.recurring && p.occurrence ? `?occurrence=${encodeURIComponent(p.occurrence)}` : ""
     Turbo.visit(`/events/${p.eventId}/edit${q}`)
   }
@@ -134,7 +174,7 @@ export default class extends Controller {
         ? { start: ev.startStr.slice(0, 10), end: (ev.endStr || ev.startStr).slice(0, 10), all_day: true }
         : { start: ev.start.toISOString(), end: (ev.end || new Date(ev.start.getTime() + 3600e3)).toISOString(), all_day: false }
       await this.send("PATCH", url, body)
-      if (p.recurring) this.calendar.refetchEvents()
+      this.calendar.refetchEvents()
     } catch (err) {
       alert(err.message)
       info.revert()
@@ -143,14 +183,17 @@ export default class extends Controller {
 
   async received(info) {
     const ev = info.event
-    const taskId = ev.extendedProps.taskId
+    const { taskId, jotId } = ev.extendedProps
     try {
-      const start = ev.allDay ? `${ev.startStr.slice(0, 10)}T09:00` : ev.start.toISOString()
-      await this.send("POST", `${this.tasksUrlValue}/${taskId}/schedule`, {
-        start,
-        duration_minutes: Math.round(((ev.end || ev.start) - ev.start) / 60000) || undefined,
-      })
-      this.tasksTarget.querySelector(`[data-task-id="${taskId}"]`)?.remove()
+      const start = ev.allDay ? `${ev.startStr.slice(0, 10)}T${this.dayStartValue || "09:00"}` : ev.start.toISOString()
+      const minutes = Math.round(((ev.end || ev.start) - ev.start) / 60000) || undefined
+      if (jotId) {
+        await this.send("POST", `${this.jotsUrlValue}/${jotId}/convert`, { schedule_start: start, duration_minutes: minutes })
+        this.tasksTarget.querySelector(`[data-jot-id="${jotId}"]`)?.remove()
+      } else {
+        await this.send("POST", `${this.tasksUrlValue}/${taskId}/schedule`, { start, duration_minutes: minutes })
+        this.tasksTarget.querySelector(`[data-task-id="${taskId}"]`)?.remove()
+      }
     } catch (err) {
       alert(err.message)
     } finally {
